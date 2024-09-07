@@ -1,6 +1,7 @@
 package timetable
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -27,11 +28,11 @@ const (
 )
 
 type client interface {
-	GetEducatorEvents(educatorID uint64) ([]Event, error)
-	GetGroupEvents(groupID uint64) ([]Event, error)
-	GetClassroomEvents(classroomName string) ([]Event, error)
-	FindEducator(firstName, lastName, middleName string) (uint64, error)
-	FindGroup(groupName string) (uint64, error)
+	GetEducatorEvents(ctx context.Context, educatorID uint64) ([]Event, error)
+	GetGroupEvents(ctx context.Context, groupID uint64) ([]Event, error)
+	GetClassroomEvents(ctx context.Context, classroomName string) ([]Event, error)
+	FindEducator(ctx context.Context, firstName, lastName, middleName string) (uint64, error)
+	FindGroup(ctx context.Context, groupName string) (uint64, error)
 }
 
 type CalendarLoader struct {
@@ -43,7 +44,7 @@ var (
 	errParseEducatorName    = errors.New("can't parse educator's name")
 )
 
-func (c CalendarLoader) Load(owner CalendarOwner) (schedule calendar.Calendar, err error) {
+func (c CalendarLoader) Load(ctx context.Context, owner CalendarOwner) (schedule calendar.Calendar, err error) {
 	schedule.Owner = owner.String()
 	schedule.Source = calendar.Timetable
 	schedule.Events = make([]calendar.Event, 0)
@@ -61,12 +62,12 @@ func (c CalendarLoader) Load(owner CalendarOwner) (schedule calendar.Calendar, e
 			break
 		}
 
-		educatorID, err = c.client.FindEducator(firstName, lastName, middleName)
+		educatorID, err = c.client.FindEducator(ctx, firstName, lastName, middleName)
 		if err != nil {
 			break
 		}
 
-		events, err = c.client.GetEducatorEvents(educatorID)
+		events, err = c.client.GetEducatorEvents(ctx, educatorID)
 		for _, e := range events {
 			schedule.Events = append(schedule.Events, e.standardize())
 		}
@@ -76,19 +77,19 @@ func (c CalendarLoader) Load(owner CalendarOwner) (schedule calendar.Calendar, e
 			events  []Event
 		)
 
-		groupID, err = c.client.FindGroup(owner.name)
+		groupID, err = c.client.FindGroup(ctx, owner.name)
 		if err != nil {
 			break
 		}
 
-		events, err = c.client.GetGroupEvents(groupID)
+		events, err = c.client.GetGroupEvents(ctx, groupID)
 		for _, e := range events {
 			schedule.Events = append(schedule.Events, e.standardize())
 		}
 	case Classroom:
 		var events []Event
 
-		events, err = c.client.GetClassroomEvents(owner.name)
+		events, err = c.client.GetClassroomEvents(ctx, owner.name)
 		if err != nil {
 			break
 		}
