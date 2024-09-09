@@ -23,6 +23,14 @@ type Calendar struct {
 	Source Source
 }
 
+func NewCalendar(owner string, source Source) Calendar {
+	return Calendar{
+		Owner:  owner,
+		Source: source,
+		Events: make([]Event, 0),
+	}
+}
+
 type Loader interface {
 	Load() Calendar
 }
