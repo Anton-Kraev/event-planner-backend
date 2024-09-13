@@ -3,7 +3,7 @@ package schedule
 import (
 	"context"
 
-	"github.com/Anton-Kraev/event-timeslot-planner/internal/domain/calendar/timetable"
+	"github.com/Anton-Kraev/event-timeslot-planner/internal/domain/schedule/timetable"
 )
 
 type (

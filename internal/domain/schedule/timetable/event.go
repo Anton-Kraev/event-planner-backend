@@ -3,7 +3,7 @@ package timetable
 import (
 	"time"
 
-	"github.com/Anton-Kraev/event-timeslot-planner/internal/domain/calendar"
+	"github.com/Anton-Kraev/event-timeslot-planner/internal/domain/schedule"
 )
 
 type Event struct {
@@ -13,8 +13,8 @@ type Event struct {
 	Description string    `json:"description"`
 }
 
-func (e Event) Standardize() calendar.Event {
-	return calendar.Event{
+func (e Event) Standardize() schedule.Event {
+	return schedule.Event{
 		StartTime:   e.StartTime,
 		EndTime:     e.EndTime,
 		Location:    e.Location,

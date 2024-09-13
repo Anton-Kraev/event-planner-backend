@@ -4,32 +4,32 @@ import (
 	"context"
 	"errors"
 
-	"github.com/Anton-Kraev/event-timeslot-planner/internal/domain/calendar"
-	"github.com/Anton-Kraev/event-timeslot-planner/internal/domain/calendar/timetable"
+	"github.com/Anton-Kraev/event-timeslot-planner/internal/domain/schedule"
+	"github.com/Anton-Kraev/event-timeslot-planner/internal/domain/schedule/timetable"
 )
 
 func (s Service) GetTimetableSchedule(
 	ctx context.Context, owner timetable.CalendarOwner,
-) (calendar.Calendar, error) {
+) (schedule.Calendar, error) {
 	events, err := s.ttCache.GetEvents(ctx, owner)
 	if err != nil && !errors.Is(err, timetable.ErrNotCachedYet) {
-		return calendar.Calendar{}, err
+		return schedule.Calendar{}, err
 	}
 
 	if errors.Is(err, timetable.ErrNotCachedYet) {
 		events, err = s.getEventsFromTimetable(ctx, owner)
 		if err != nil {
-			return calendar.Calendar{}, err
+			return schedule.Calendar{}, err
 		}
 	}
 
-	schedule := calendar.NewCalendar(owner.String(), calendar.Timetable)
+	calendar := schedule.NewCalendar(owner.String(), schedule.Timetable)
 
 	for _, event := range events {
-		schedule.Events = append(schedule.Events, event.Standardize())
+		calendar.Events = append(calendar.Events, event.Standardize())
 	}
 
-	return schedule, nil
+	return calendar, nil
 }
 
 func (s Service) getEventsFromTimetable(

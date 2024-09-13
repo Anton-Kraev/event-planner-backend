@@ -1,4 +1,4 @@
-package calendar
+package schedule
 
 import (
 	"time"
@@ -29,8 +29,4 @@ func NewCalendar(owner string, source Source) Calendar {
 		Source: source,
 		Events: make([]Event, 0),
 	}
-}
-
-type Loader interface {
-	Load() Calendar
 }
