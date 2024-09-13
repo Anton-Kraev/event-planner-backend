@@ -1,0 +1,72 @@
+package schedule
+
+import (
+	"context"
+	"errors"
+
+	"github.com/Anton-Kraev/event-timeslot-planner/internal/domain/calendar"
+	"github.com/Anton-Kraev/event-timeslot-planner/internal/domain/calendar/timetable"
+)
+
+func (s Service) GetTimetableSchedule(
+	ctx context.Context, owner timetable.CalendarOwner,
+) (calendar.Calendar, error) {
+	events, err := s.ttCache.GetEvents(ctx, owner)
+	if err != nil && !errors.Is(err, timetable.ErrNotCachedYet) {
+		return calendar.Calendar{}, err
+	}
+
+	if errors.Is(err, timetable.ErrNotCachedYet) {
+		events, err = s.getEventsFromTimetable(ctx, owner)
+		if err != nil {
+			return calendar.Calendar{}, err
+		}
+	}
+
+	schedule := calendar.NewCalendar(owner.String(), calendar.Timetable)
+
+	for _, event := range events {
+		schedule.Events = append(schedule.Events, event.Standardize())
+	}
+
+	return schedule, nil
+}
+
+func (s Service) getEventsFromTimetable(
+	ctx context.Context, owner timetable.CalendarOwner,
+) (events []timetable.Event, err error) {
+	switch owner.Class {
+	case timetable.Educator:
+		var (
+			firstName, lastName, middleName string
+			educatorID                      uint64
+		)
+
+		firstName, lastName, middleName, err = timetable.ParseEducatorName(owner.Name)
+		if err != nil {
+			return
+		}
+
+		educatorID, err = s.ttClient.FindEducator(ctx, firstName, lastName, middleName)
+		if err != nil {
+			return
+		}
+
+		events, err = s.ttClient.GetEducatorEvents(ctx, educatorID)
+	case timetable.Group:
+		var groupID uint64
+
+		groupID, err = s.ttClient.FindGroup(ctx, owner.Name)
+		if err != nil {
+			return
+		}
+
+		events, err = s.ttClient.GetGroupEvents(ctx, groupID)
+	case timetable.Classroom:
+		events, err = s.ttClient.GetClassroomEvents(ctx, owner.Name)
+	default:
+		err = timetable.ErrUnexpectedOwnerClass
+	}
+
+	return
+}

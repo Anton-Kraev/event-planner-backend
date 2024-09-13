@@ -11,10 +11,10 @@ const (
 )
 
 type CalendarOwner struct {
-	name  string
-	class UserClass
+	Name  string
+	Class UserClass
 }
 
 func (o CalendarOwner) String() string {
-	return fmt.Sprintf("%s %s", o.class, o.name)
+	return fmt.Sprintf("%s %s", o.Class, o.Name)
 }

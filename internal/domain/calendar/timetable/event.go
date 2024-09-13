@@ -13,7 +13,7 @@ type Event struct {
 	Description string    `json:"description"`
 }
 
-func (e Event) standardize() calendar.Event {
+func (e Event) Standardize() calendar.Event {
 	return calendar.Event{
 		StartTime:   e.StartTime,
 		EndTime:     e.EndTime,
