@@ -1,7 +1,7 @@
 package main
 
-import "fmt"
+import "github.com/Anton-Kraev/event-timeslot-planner/internal/app"
 
 func main() {
-	fmt.Println("Hello World")
+	app.Run()
 }
