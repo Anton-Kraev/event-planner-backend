@@ -12,15 +12,16 @@ func (s Service) GetTimetableSchedule(
 	ctx context.Context, owner timetable.CalendarOwner,
 ) (schedule.Calendar, error) {
 	events, err := s.ttCache.GetEvents(ctx, owner)
-	if err != nil && !errors.Is(err, timetable.ErrNotCachedYet) {
+	if errors.Is(err, timetable.ErrNotCachedYet) {
+		events, err = s.getEventsFromTimetable(ctx, owner)
+	}
+
+	if err != nil {
 		return schedule.Calendar{}, err
 	}
 
-	if errors.Is(err, timetable.ErrNotCachedYet) {
-		events, err = s.getEventsFromTimetable(ctx, owner)
-		if err != nil {
-			return schedule.Calendar{}, err
-		}
+	if err = s.ttCache.SetEvents(ctx, owner, events); err != nil {
+		return schedule.Calendar{}, err
 	}
 
 	calendar := schedule.NewCalendar(owner.String(), schedule.Timetable)

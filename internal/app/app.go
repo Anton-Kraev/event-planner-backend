@@ -1,11 +1,13 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"log/slog"
 	"os"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
 
 	"github.com/Anton-Kraev/event-timeslot-planner/internal/config"
@@ -33,7 +35,24 @@ func Run() {
 	logger.Info("starting event-timeslot-planner", slog.String("env", env))
 	logger.Debug("debug logging enabled")
 
-	// TODO: init tt cache
+	ctx := context.Background()
+
+	redisConfig := viper.GetStringMap("redis")
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     redisConfig["addr"].(string),
+		Password: redisConfig["password"].(string),
+		DB:       redisConfig["db"].(int),
+	})
+
+	pingRes, err := redisClient.Ping(ctx).Result()
+	if err != nil {
+		log.Fatalf("error connecting redis: %s", err.Error())
+	}
+
+	logger.Info("pinging redis", slog.String("result", pingRes))
+
+	defer redisClient.Close()
+
 	// TODO: init schedule service
 	// TODO: init schedule controller
 	// TODO: init router: chi/stdlib

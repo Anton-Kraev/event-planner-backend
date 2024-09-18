@@ -17,7 +17,7 @@ type (
 
 	timetableCache interface {
 		GetEvents(ctx context.Context, owner timetable.CalendarOwner) ([]timetable.Event, error)
-		SaveEvents(ctx context.Context, owner timetable.CalendarOwner, events []timetable.Event) error
+		SetEvents(ctx context.Context, owner timetable.CalendarOwner, events []timetable.Event) error
 	}
 
 	Service struct {

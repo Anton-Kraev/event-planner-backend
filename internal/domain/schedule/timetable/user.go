@@ -16,5 +16,5 @@ type CalendarOwner struct {
 }
 
 func (o CalendarOwner) String() string {
-	return fmt.Sprintf("%s %s", o.Class, o.Name)
+	return fmt.Sprintf("%s:%s", o.Class, o.Name)
 }

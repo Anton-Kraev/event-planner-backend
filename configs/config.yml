@@ -5,3 +5,8 @@ http_server:
   idle_timeout: 60s
 tt_server:
   address: "localhost:8081"
+redis:
+  address: "localhost:6379"
+  password: ""
+  db: 0
+  expiration_period: 2h
