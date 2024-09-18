@@ -2,26 +2,18 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"log/slog"
 	"net/http"
-	"os"
 
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
 
 	ttcli "github.com/Anton-Kraev/event-timeslot-planner/internal/client/timetable"
 	"github.com/Anton-Kraev/event-timeslot-planner/internal/config"
+	"github.com/Anton-Kraev/event-timeslot-planner/internal/logger"
 	ttrepo "github.com/Anton-Kraev/event-timeslot-planner/internal/repository/redis/timetable"
 	"github.com/Anton-Kraev/event-timeslot-planner/internal/service/schedule"
-)
-
-type envType string
-
-const (
-	envLocal envType = "local"
-	envProd  envType = "prod"
 )
 
 func Run() {
@@ -31,13 +23,13 @@ func Run() {
 
 	env := viper.GetString("env")
 
-	logger, err := setupLogger(envType(env))
+	customLog, err := logger.Setup(logger.EnvType(env))
 	if err != nil {
 		log.Fatalf("error initializing logger: %s", err.Error())
 	}
 
-	logger.Info("starting event-timeslot-planner", slog.String("env", env))
-	logger.Debug("debug logging enabled")
+	customLog.Info("starting event-timeslot-planner", slog.String("env", env))
+	customLog.Debug("debug logging enabled")
 
 	redisConfig := viper.Sub("redis")
 	if redisConfig == nil {
@@ -61,7 +53,7 @@ func Run() {
 		log.Fatalf("error connecting redis: %s", err.Error())
 	}
 
-	logger.Info("pinging redis", slog.String("result", pingRes))
+	customLog.Info("pinging redis", slog.String("result", pingRes))
 
 	defer redisClient.Close()
 
@@ -95,19 +87,4 @@ func Run() {
 	// TODO: init schedule controller
 	// TODO: init router: chi/stdlib
 	// TODO: run server
-}
-
-func setupLogger(env envType) (*slog.Logger, error) {
-	switch env {
-	case envLocal:
-		return slog.New(
-			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
-		), nil
-	case envProd:
-		return slog.New(
-			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}),
-		), nil
-	}
-
-	return nil, fmt.Errorf("invalid env: %s", env)
 }
