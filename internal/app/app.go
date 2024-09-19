@@ -10,10 +10,10 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/redis/go-redis/v9"
 
-	ttcli "github.com/Anton-Kraev/event-timeslot-planner/internal/client/timetable"
 	"github.com/Anton-Kraev/event-timeslot-planner/internal/config"
-	mw "github.com/Anton-Kraev/event-timeslot-planner/internal/http/middleware"
-	"github.com/Anton-Kraev/event-timeslot-planner/internal/logger"
+	ttcli "github.com/Anton-Kraev/event-timeslot-planner/internal/http/client/timetable"
+	mw "github.com/Anton-Kraev/event-timeslot-planner/internal/http/server/middleware"
+	"github.com/Anton-Kraev/event-timeslot-planner/internal/lib/logger"
 	ttrepo "github.com/Anton-Kraev/event-timeslot-planner/internal/repository/redis/timetable"
 	"github.com/Anton-Kraev/event-timeslot-planner/internal/service/schedule"
 )
