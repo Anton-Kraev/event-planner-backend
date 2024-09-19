@@ -11,7 +11,6 @@ type EnvType string
 
 const (
 	EnvLocal EnvType = "local"
-	EnvProd  EnvType = "prod"
 )
 
 type (
@@ -34,7 +33,7 @@ type (
 	}
 
 	Config struct {
-		Env          EnvType            `mapstructure:"env"`
+		Env          EnvType            `mapstructure:"env,omitempty"`
 		HttpServer   HttpServerConfig   `mapstructure:"http_server"`
 		TimetableAPI TimetableAPIConfig `mapstructure:"timetable_api"`
 		Redis        RedisConfig        `mapstructure:"redis"`
