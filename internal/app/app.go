@@ -6,10 +6,13 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/redis/go-redis/v9"
 
 	ttcli "github.com/Anton-Kraev/event-timeslot-planner/internal/client/timetable"
 	"github.com/Anton-Kraev/event-timeslot-planner/internal/config"
+	mw "github.com/Anton-Kraev/event-timeslot-planner/internal/http/middleware"
 	"github.com/Anton-Kraev/event-timeslot-planner/internal/logger"
 	ttrepo "github.com/Anton-Kraev/event-timeslot-planner/internal/repository/redis/timetable"
 	"github.com/Anton-Kraev/event-timeslot-planner/internal/service/schedule"
@@ -18,7 +21,7 @@ import (
 func Run() {
 	cfg := config.MustInit()
 
-	log := logger.MustSetup(cfg.Env)
+	log := logger.Setup(cfg.Env)
 	log.Info("starting event-timeslot-planner", slog.String("env", string(cfg.Env)))
 	log.Debug("debug logging enabled")
 
@@ -43,7 +46,16 @@ func Run() {
 	httpClient := &http.Client{Timeout: cfg.TimetableAPI.Timeout}
 	ttClient := ttcli.NewClient(cfg.TimetableAPI.Address, httpClient)
 
-	_ = schedule.NewService(ttClient, ttCache)
+	scheduleService := schedule.NewService(ttClient, ttCache)
+
+	router := chi.NewRouter()
+
+	router.Use(middleware.RequestID)
+	router.Use(mw.NewLogger(log))
+	router.Use(middleware.Recoverer)
+	router.Use(middleware.URLFormat)
+
+	_ = scheduleService
 
 	// TODO: init schedule controller
 	// TODO: init router: chi/stdlib
