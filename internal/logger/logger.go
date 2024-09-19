@@ -1,29 +1,26 @@
 package logger
 
 import (
-	"fmt"
+	"log"
 	"log/slog"
 	"os"
+
+	"github.com/Anton-Kraev/event-timeslot-planner/internal/config"
 )
 
-type EnvType string
-
-const (
-	envLocal EnvType = "local"
-	envProd  EnvType = "prod"
-)
-
-func Setup(env EnvType) (*slog.Logger, error) {
+func MustSetup(env config.EnvType) *slog.Logger {
 	switch env {
-	case envLocal:
+	case config.EnvLocal:
 		return slog.New(
 			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
-		), nil
-	case envProd:
+		)
+	case config.EnvProd:
 		return slog.New(
 			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}),
-		), nil
-	}
+		)
+	default:
+		log.Fatalf("error initializing logger: invalid env: %s", env)
 
-	return nil, fmt.Errorf("invalid env: %s", env)
+		return nil
+	}
 }

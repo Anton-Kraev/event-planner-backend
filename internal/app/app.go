@@ -2,12 +2,11 @@ package app
 
 import (
 	"context"
-	"log"
 	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/redis/go-redis/v9"
-	"github.com/spf13/viper"
 
 	ttcli "github.com/Anton-Kraev/event-timeslot-planner/internal/client/timetable"
 	"github.com/Anton-Kraev/event-timeslot-planner/internal/config"
@@ -17,70 +16,32 @@ import (
 )
 
 func Run() {
-	if err := config.InitConfig(); err != nil {
-		log.Fatalf("error initializing config: %s", err.Error())
-	}
+	cfg := config.MustInit()
 
-	env := viper.GetString("env")
-
-	customLog, err := logger.Setup(logger.EnvType(env))
-	if err != nil {
-		log.Fatalf("error initializing logger: %s", err.Error())
-	}
-
-	customLog.Info("starting event-timeslot-planner", slog.String("env", env))
-	customLog.Debug("debug logging enabled")
-
-	redisConfig := viper.Sub("redis")
-	if redisConfig == nil {
-		log.Fatal("invalid config: redis is empty")
-	}
-
-	redisAddr := redisConfig.GetString("address")
-	if redisAddr == "" {
-		log.Fatal("invalid redis config: address is empty")
-	}
+	log := logger.MustSetup(cfg.Env)
+	log.Info("starting event-timeslot-planner", slog.String("env", string(cfg.Env)))
+	log.Debug("debug logging enabled")
 
 	redisClient := redis.NewClient(&redis.Options{
-		Addr:     redisAddr,
-		Password: redisConfig.GetString("password"),
-		DB:       redisConfig.GetInt("db"),
+		Addr:     cfg.Redis.Address,
+		Password: cfg.Redis.Password,
+		DB:       cfg.Redis.DB,
 	})
+	defer redisClient.Close()
+
+	ttCache := ttrepo.NewRedisRepository(redisClient, cfg.Redis.ExpirationPeriod)
 
 	ctx := context.Background()
 	pingRes, err := redisClient.Ping(ctx).Result()
 	if err != nil {
-		log.Fatalf("error connecting redis: %s", err.Error())
+		log.Error("error connecting redis", logger.Err(err))
+		os.Exit(1)
 	}
 
-	customLog.Info("pinging redis", slog.String("result", pingRes))
+	log.Debug("pinging redis", slog.String("result", pingRes))
 
-	defer redisClient.Close()
-
-	redisExpirationPeriod := redisConfig.GetDuration("expiration_period")
-	if redisExpirationPeriod == 0 {
-		log.Fatal("invalid redis config: expiration_period is empty")
-	}
-
-	ttCache := ttrepo.NewRedisRepository(redisClient, redisExpirationPeriod)
-
-	ttConfig := viper.Sub("timetable_api")
-	if ttConfig == nil {
-		log.Fatal("invalid config: timetable_api is empty")
-	}
-
-	ttAddress := ttConfig.GetString("address")
-	if ttAddress == "" {
-		log.Fatal("invalid timetable_api config: address is empty")
-	}
-
-	ttTimeout := ttConfig.GetDuration("timeout")
-	if ttTimeout == 0 {
-		log.Fatal("invalid timetable_api config: timeout is empty")
-	}
-
-	httpClient := &http.Client{Timeout: ttTimeout}
-	ttClient := ttcli.NewClient(ttAddress, httpClient)
+	httpClient := &http.Client{Timeout: cfg.TimetableAPI.Timeout}
+	ttClient := ttcli.NewClient(cfg.TimetableAPI.Address, httpClient)
 
 	_ = schedule.NewService(ttClient, ttCache)
 
