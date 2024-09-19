@@ -13,7 +13,14 @@ const (
 )
 
 func (c Client) GetClassroomEvents(ctx context.Context, classroomName string) ([]timetable.Event, error) {
+	const op = "http.client.timetable.GetClassroomEvents"
+
 	url := fmt.Sprintf(getClassroomEventsEndpoint, c.host, classroomName)
 
-	return c.getEvents(ctx, url)
+	events, err := c.getEvents(ctx, url)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return events, nil
 }

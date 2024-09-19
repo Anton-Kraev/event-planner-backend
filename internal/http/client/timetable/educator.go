@@ -14,6 +14,8 @@ const (
 )
 
 func (c Client) FindEducator(ctx context.Context, firstName, lastName, middleName string) (uint64, error) {
+	const op = "http.client.timetable.FindEducator"
+
 	url := fmt.Sprintf(findEducatorEndpoint, c.host)
 	queryParams := map[string]string{
 		"first_name":  firstName,
@@ -21,11 +23,23 @@ func (c Client) FindEducator(ctx context.Context, firstName, lastName, middleNam
 		"middle_name": middleName,
 	}
 
-	return c.getID(ctx, url, queryParams)
+	id, err := c.getID(ctx, url, queryParams)
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return id, nil
 }
 
 func (c Client) GetEducatorEvents(ctx context.Context, educatorID uint64) ([]timetable.Event, error) {
+	const op = "http.client.timetable.GetEducatorEvents"
+
 	url := fmt.Sprintf(getEducatorEventsEndpoint, c.host, educatorID)
 
-	return c.getEvents(ctx, url)
+	events, err := c.getEvents(ctx, url)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return events, nil
 }

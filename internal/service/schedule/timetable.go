@@ -3,6 +3,7 @@ package schedule
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/Anton-Kraev/event-timeslot-planner/internal/domain/schedule"
 	"github.com/Anton-Kraev/event-timeslot-planner/internal/domain/schedule/timetable"
@@ -11,17 +12,19 @@ import (
 func (s Service) GetTimetableSchedule(
 	ctx context.Context, owner timetable.CalendarOwner,
 ) (schedule.Calendar, error) {
+	const op = "service.schedule.GetTimetableSchedule"
+
 	events, err := s.ttCache.GetEvents(ctx, owner)
 	if errors.Is(err, timetable.ErrNotCachedYet) {
 		events, err = s.getEventsFromTimetable(ctx, owner)
 	}
 
 	if err != nil {
-		return schedule.Calendar{}, err
+		return schedule.Calendar{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	if err = s.ttCache.SetEvents(ctx, owner, events); err != nil {
-		return schedule.Calendar{}, err
+		return schedule.Calendar{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	calendar := schedule.NewCalendar(owner.String(), schedule.Timetable)
