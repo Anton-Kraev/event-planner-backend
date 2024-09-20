@@ -1,3 +1,5 @@
+//go:generate mockgen -package=mocks -source=./service.go -destination=./mocks/service_mock.go
+
 package schedule
 
 import (
