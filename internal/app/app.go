@@ -12,10 +12,11 @@ import (
 
 	"github.com/Anton-Kraev/event-timeslot-planner/internal/config"
 	ttcli "github.com/Anton-Kraev/event-timeslot-planner/internal/http/client/timetable"
+	schedhndl "github.com/Anton-Kraev/event-timeslot-planner/internal/http/server/handler/schedule"
 	mw "github.com/Anton-Kraev/event-timeslot-planner/internal/http/server/middleware"
 	"github.com/Anton-Kraev/event-timeslot-planner/internal/lib/logger"
 	ttrepo "github.com/Anton-Kraev/event-timeslot-planner/internal/repository/redis/timetable"
-	"github.com/Anton-Kraev/event-timeslot-planner/internal/service/schedule"
+	schedsrvc "github.com/Anton-Kraev/event-timeslot-planner/internal/service/schedule"
 )
 
 func Run() {
@@ -46,7 +47,7 @@ func Run() {
 	httpClient := &http.Client{Timeout: cfg.TimetableAPI.Timeout}
 	ttClient := ttcli.NewClient(cfg.TimetableAPI.Address, httpClient)
 
-	scheduleService := schedule.NewService(ttClient, ttCache)
+	scheduleService := schedsrvc.NewService(ttClient, ttCache)
 
 	router := chi.NewRouter()
 
@@ -55,9 +56,23 @@ func Run() {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
 
-	_ = scheduleService
+	scheduleHandler := schedhndl.NewHandler(scheduleService, log)
 
-	// TODO: init schedule controller
-	// TODO: init router: chi/stdlib
-	// TODO: run server
+	router.Get("/timetable/get_schedule", scheduleHandler.GetTimetableSchedule)
+
+	log.Info("starting server", slog.String("address", cfg.HttpServer.Address))
+
+	srv := &http.Server{
+		Addr:         cfg.HttpServer.Address,
+		Handler:      router,
+		ReadTimeout:  cfg.HttpServer.Timeout,
+		WriteTimeout: cfg.HttpServer.Timeout,
+		IdleTimeout:  cfg.HttpServer.Timeout,
+	}
+
+	if err = srv.ListenAndServe(); err != nil {
+		log.Error("failed to start server")
+	}
+
+	log.Error("server stopped")
 }
