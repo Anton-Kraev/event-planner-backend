@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/Anton-Kraev/event-timeslot-planner/internal/config"
+	"github.com/Anton-Kraev/event-planner-backend/internal/config"
 )
 
 func Setup(env config.EnvType) *slog.Logger {

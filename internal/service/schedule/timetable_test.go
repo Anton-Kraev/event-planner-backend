@@ -8,9 +8,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/Anton-Kraev/event-timeslot-planner/internal/domain/schedule"
-	"github.com/Anton-Kraev/event-timeslot-planner/internal/domain/schedule/timetable"
-	"github.com/Anton-Kraev/event-timeslot-planner/internal/service/schedule/mocks"
+	"github.com/Anton-Kraev/event-planner-backend/internal/domain/schedule"
+	"github.com/Anton-Kraev/event-planner-backend/internal/domain/schedule/timetable"
+	"github.com/Anton-Kraev/event-planner-backend/internal/service/schedule/mocks"
 )
 
 func TestService_GetTimetableSchedule(t *testing.T) {

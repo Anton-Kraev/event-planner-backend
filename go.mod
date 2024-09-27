@@ -1,4 +1,4 @@
-module github.com/Anton-Kraev/event-timeslot-planner
+module github.com/Anton-Kraev/event-planner-backend
 
 go 1.22.2
 

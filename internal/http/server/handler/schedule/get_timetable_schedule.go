@@ -8,9 +8,9 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 
-	"github.com/Anton-Kraev/event-timeslot-planner/internal/domain/schedule/timetable"
-	"github.com/Anton-Kraev/event-timeslot-planner/internal/lib/api/response"
-	"github.com/Anton-Kraev/event-timeslot-planner/internal/lib/logger"
+	"github.com/Anton-Kraev/event-planner-backend/internal/domain/schedule/timetable"
+	"github.com/Anton-Kraev/event-planner-backend/internal/lib/api/response"
+	"github.com/Anton-Kraev/event-planner-backend/internal/lib/logger"
 )
 
 type (

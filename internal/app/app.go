@@ -10,13 +10,13 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/redis/go-redis/v9"
 
-	"github.com/Anton-Kraev/event-timeslot-planner/internal/config"
-	ttcli "github.com/Anton-Kraev/event-timeslot-planner/internal/http/client/timetable"
-	schedhndl "github.com/Anton-Kraev/event-timeslot-planner/internal/http/server/handler/schedule"
-	mw "github.com/Anton-Kraev/event-timeslot-planner/internal/http/server/middleware"
-	"github.com/Anton-Kraev/event-timeslot-planner/internal/lib/logger"
-	ttrepo "github.com/Anton-Kraev/event-timeslot-planner/internal/repository/redis/timetable"
-	schedsrvc "github.com/Anton-Kraev/event-timeslot-planner/internal/service/schedule"
+	"github.com/Anton-Kraev/event-planner-backend/internal/config"
+	ttcli "github.com/Anton-Kraev/event-planner-backend/internal/http/client/timetable"
+	schedhndl "github.com/Anton-Kraev/event-planner-backend/internal/http/server/handler/schedule"
+	mw "github.com/Anton-Kraev/event-planner-backend/internal/http/server/middleware"
+	"github.com/Anton-Kraev/event-planner-backend/internal/lib/logger"
+	ttrepo "github.com/Anton-Kraev/event-planner-backend/internal/repository/redis/timetable"
+	schedsrvc "github.com/Anton-Kraev/event-planner-backend/internal/service/schedule"
 )
 
 func Run() {
@@ -31,7 +31,12 @@ func Run() {
 		Password: cfg.Redis.Password,
 		DB:       cfg.Redis.DB,
 	})
-	defer redisClient.Close()
+	defer func(redisClient *redis.Client) {
+		err := redisClient.Close()
+		if err != nil {
+			log.Warn("failed to close redis connection", logger.Err(err))
+		}
+	}(redisClient)
 
 	ttCache := ttrepo.NewRedisRepository(redisClient, cfg.Redis.ExpirationPeriod)
 

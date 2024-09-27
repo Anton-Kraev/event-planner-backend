@@ -3,7 +3,7 @@ package schedule
 import (
 	"time"
 
-	"github.com/Anton-Kraev/event-timeslot-planner/internal/domain/schedule"
+	"github.com/Anton-Kraev/event-planner-backend/internal/domain/schedule"
 )
 
 type (
