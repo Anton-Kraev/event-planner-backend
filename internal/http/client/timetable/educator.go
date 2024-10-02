@@ -2,37 +2,37 @@ package timetable
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 
-	"github.com/Anton-Kraev/event-planner-backend/internal/domain/schedule/timetable"
+	"github.com/Anton-Kraev/event-planner-backend/internal/domain/timetable"
 )
 
 const (
-	educatorRoute             = api + "/educator"
-	findEducatorEndpoint      = educatorRoute + "/find"
-	getEducatorEventsEndpoint = educatorRoute + "/%d/events"
+	educatorsRoute            = api + "/educators"
+	getEducatorEventsEndpoint = educatorsRoute + "/%d/events"
 )
 
-func (c Client) FindEducator(ctx context.Context, firstName, lastName, middleName string) (uint64, error) {
-	const op = "http.client.timetable.FindEducator"
+func (c Client) Educators(ctx context.Context) ([]timetable.Educator, error) {
+	const op = "http.client.timetable.Educators"
 
-	url := fmt.Sprintf(findEducatorEndpoint, c.host)
-	queryParams := map[string]string{
-		"first_name":  firstName,
-		"last_name":   lastName,
-		"middle_name": middleName,
-	}
-
-	id, err := c.getID(ctx, url, queryParams)
+	respB, err := c.doHTTP(ctx, http.MethodGet, educatorsRoute)
 	if err != nil {
-		return 0, fmt.Errorf("%s: %w", op, err)
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return id, nil
+	var educators []timetable.Educator
+
+	if err = json.Unmarshal(respB, &educators); err != nil {
+		return nil, fmt.Errorf("%s: failed to parse response body: %w", op, err)
+	}
+
+	return educators, nil
 }
 
-func (c Client) GetEducatorEvents(ctx context.Context, educatorID uint64) ([]timetable.Event, error) {
-	const op = "http.client.timetable.GetEducatorEvents"
+func (c Client) EducatorSchedule(ctx context.Context, educatorID uint64) ([]timetable.Event, error) {
+	const op = "http.client.timetable.EducatorSchedule"
 
 	url := fmt.Sprintf(getEducatorEventsEndpoint, c.host, educatorID)
 

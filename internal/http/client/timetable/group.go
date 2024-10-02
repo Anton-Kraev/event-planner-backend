@@ -2,33 +2,37 @@ package timetable
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 
-	"github.com/Anton-Kraev/event-planner-backend/internal/domain/schedule/timetable"
+	"github.com/Anton-Kraev/event-planner-backend/internal/domain/timetable"
 )
 
 const (
-	groupRoute             = api + "/group"
-	findGroupEndpoint      = groupRoute + "/find"
-	getGroupEventsEndpoint = groupRoute + "/%d/events"
+	groupsRoute            = api + "/groups"
+	getGroupEventsEndpoint = groupsRoute + "/%d/events"
 )
 
-func (c Client) FindGroup(ctx context.Context, groupName string) (uint64, error) {
-	const op = "http.client.timetable.FindGroup"
+func (c Client) Groups(ctx context.Context) ([]timetable.Group, error) {
+	const op = "http.client.timetable.Groups"
 
-	url := fmt.Sprintf(findGroupEndpoint, c.host)
-	queryParams := map[string]string{"name": groupName}
-
-	id, err := c.getID(ctx, url, queryParams)
+	respB, err := c.doHTTP(ctx, http.MethodGet, groupsRoute)
 	if err != nil {
-		return 0, fmt.Errorf("%s: %w", op, err)
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return id, nil
+	var groups []timetable.Group
+
+	if err = json.Unmarshal(respB, &groups); err != nil {
+		return nil, fmt.Errorf("%s: failed to parse response body: %w", op, err)
+	}
+
+	return groups, nil
 }
 
-func (c Client) GetGroupEvents(ctx context.Context, groupID uint64) ([]timetable.Event, error) {
-	const op = "http.client.timetable.GetGroupEvents"
+func (c Client) GroupSchedule(ctx context.Context, groupID uint64) ([]timetable.Event, error) {
+	const op = "http.client.timetable.GroupSchedule"
 
 	url := fmt.Sprintf(getGroupEventsEndpoint, c.host, groupID)
 

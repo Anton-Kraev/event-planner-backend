@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 
-	"github.com/Anton-Kraev/event-planner-backend/internal/domain/schedule/timetable"
+	"github.com/Anton-Kraev/event-planner-backend/internal/domain/timetable"
 )
 
 const (
@@ -24,16 +23,10 @@ func NewClient(host string, httpClient *http.Client) Client {
 	return Client{host: host, httpClient: httpClient}
 }
 
-func (c Client) doHTTP(
-	ctx context.Context, method string, url string, queryParams map[string]string,
-) ([]byte, error) {
+func (c Client) doHTTP(ctx context.Context, method string, url string) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, method, url, http.NoBody)
 	if err != nil {
 		return nil, err
-	}
-
-	for k, v := range queryParams {
-		req.URL.Query().Add(k, v)
 	}
 
 	resp, err := c.httpClient.Do(req)
@@ -55,22 +48,8 @@ func (c Client) doHTTP(
 	return respB, nil
 }
 
-func (c Client) getID(ctx context.Context, url string, queryParams map[string]string) (uint64, error) {
-	respB, err := c.doHTTP(ctx, http.MethodGet, url, queryParams)
-	if err != nil {
-		return 0, err
-	}
-
-	id, err := strconv.ParseUint(string(respB), 10, 64)
-	if err != nil {
-		return 0, fmt.Errorf("failed to parse response body: %w", err)
-	}
-
-	return id, nil
-}
-
 func (c Client) getEvents(ctx context.Context, url string) ([]timetable.Event, error) {
-	respB, err := c.doHTTP(ctx, http.MethodGet, url, nil)
+	respB, err := c.doHTTP(ctx, http.MethodGet, url)
 	if err != nil {
 		return nil, err
 	}
