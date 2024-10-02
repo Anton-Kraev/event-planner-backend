@@ -26,10 +26,11 @@ type (
 	}
 
 	RedisConfig struct {
-		Address          string        `mapstructure:"address"`
-		Password         string        `mapstructure:"password,omitempty"`
-		DB               int           `mapstructure:"db,omitempty"`
-		ExpirationPeriod time.Duration `mapstructure:"expiration_period"`
+		Address        string        `mapstructure:"address"`
+		Password       string        `mapstructure:"password,omitempty"`
+		DB             int           `mapstructure:"db,omitempty"`
+		UserExpPeriod  time.Duration `mapstructure:"user_exp_period"`
+		EventExpPeriod time.Duration `mapstructure:"event_exp_period"`
 	}
 
 	Config struct {
