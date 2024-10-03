@@ -1,0 +1,14 @@
+env: "local" # local, prod
+http_server:
+  address: ":8080"
+  timeout: 4s
+  idle_timeout: 60s
+timetable_api:
+  address: "http://host.docker.internal:8082"
+  timeout: 5s
+redis:
+  address: "redis:6379"
+  password: "password" # move to .env
+  db: 0
+  user_exp_period: 24h
+  event_exp_period: 4h
