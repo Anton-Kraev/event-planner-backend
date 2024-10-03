@@ -3,6 +3,7 @@ package timetable
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -14,10 +15,16 @@ const (
 	api = "%s/api"
 )
 
-type Client struct {
-	host       string
-	httpClient *http.Client
-}
+type (
+	eventsResp struct {
+		Events []timetable.Event `json:"events"`
+	}
+
+	Client struct {
+		host       string
+		httpClient *http.Client
+	}
+)
 
 func NewClient(host string, httpClient *http.Client) Client {
 	return Client{host: host, httpClient: httpClient}
@@ -54,11 +61,15 @@ func (c Client) getEvents(ctx context.Context, url string) ([]timetable.Event, e
 		return nil, err
 	}
 
-	var events []timetable.Event
+	if respB == nil || len(respB) == 0 {
+		return nil, errors.New("no events found")
+	}
+
+	var events eventsResp
 
 	if err = json.Unmarshal(respB, &events); err != nil {
 		return nil, fmt.Errorf("failed to parse response body: %w", err)
 	}
 
-	return events, nil
+	return events.Events, nil
 }

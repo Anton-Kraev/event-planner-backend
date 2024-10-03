@@ -9,6 +9,10 @@ import (
 	"github.com/Anton-Kraev/event-planner-backend/internal/domain/timetable"
 )
 
+type educatorsResp struct {
+	Educators []timetable.Educator `json:"educators"`
+}
+
 const (
 	educatorsRoute            = api + "/educators"
 	getEducatorEventsEndpoint = educatorsRoute + "/%d/events"
@@ -17,18 +21,18 @@ const (
 func (c Client) Educators(ctx context.Context) ([]timetable.Educator, error) {
 	const op = "http.client.timetable.Educators"
 
-	respB, err := c.doHTTP(ctx, http.MethodGet, educatorsRoute)
+	respB, err := c.doHTTP(ctx, http.MethodGet, fmt.Sprintf(educatorsRoute, c.host))
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	var educators []timetable.Educator
+	var educators educatorsResp
 
 	if err = json.Unmarshal(respB, &educators); err != nil {
 		return nil, fmt.Errorf("%s: failed to parse response body: %w", op, err)
 	}
 
-	return educators, nil
+	return educators.Educators, nil
 }
 
 func (c Client) EducatorSchedule(ctx context.Context, educatorID uint64) ([]timetable.Event, error) {
