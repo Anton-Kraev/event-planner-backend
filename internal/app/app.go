@@ -6,17 +6,15 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/redis/go-redis/v9"
 
 	"github.com/Anton-Kraev/event-planner-backend/internal/config"
 	ttcli "github.com/Anton-Kraev/event-planner-backend/internal/http/client/timetable"
-	schedhndl "github.com/Anton-Kraev/event-planner-backend/internal/http/server/handler/schedule"
-	mw "github.com/Anton-Kraev/event-planner-backend/internal/http/server/middleware"
+	tthndl "github.com/Anton-Kraev/event-planner-backend/internal/http/server/handler/timetable"
+	rtr "github.com/Anton-Kraev/event-planner-backend/internal/http/server/router"
 	"github.com/Anton-Kraev/event-planner-backend/internal/lib/logger"
 	ttrepo "github.com/Anton-Kraev/event-planner-backend/internal/repository/redis/timetable"
-	schedsrvc "github.com/Anton-Kraev/event-planner-backend/internal/service/schedule"
+	ttsrvc "github.com/Anton-Kraev/event-planner-backend/internal/service/timetable"
 )
 
 func Run() {
@@ -31,6 +29,7 @@ func Run() {
 		Password: cfg.Redis.Password,
 		DB:       cfg.Redis.DB,
 	})
+
 	defer func(redisClient *redis.Client) {
 		err := redisClient.Close()
 		if err != nil {
@@ -38,7 +37,7 @@ func Run() {
 		}
 	}(redisClient)
 
-	ttCache := ttrepo.NewRedisRepository(redisClient, cfg.Redis.ExpirationPeriod)
+	ttCache := ttrepo.NewRedisRepository(redisClient, cfg.Redis.UserExpPeriod, cfg.Redis.EventExpPeriod)
 
 	ctx := context.Background()
 	pingRes, err := redisClient.Ping(ctx).Result()
@@ -52,18 +51,10 @@ func Run() {
 	httpClient := &http.Client{Timeout: cfg.TimetableAPI.Timeout}
 	ttClient := ttcli.NewClient(cfg.TimetableAPI.Address, httpClient)
 
-	scheduleService := schedsrvc.NewService(ttClient, ttCache)
+	scheduleService := ttsrvc.NewService(ttClient, ttCache)
+	scheduleHandler := tthndl.NewHandler(scheduleService, log)
 
-	router := chi.NewRouter()
-
-	router.Use(middleware.RequestID)
-	router.Use(mw.NewLogger(log))
-	router.Use(middleware.Recoverer)
-	router.Use(middleware.URLFormat)
-
-	scheduleHandler := schedhndl.NewHandler(scheduleService, log)
-
-	router.Get("/timetable/get_schedule", scheduleHandler.GetTimetableSchedule)
+	router := rtr.SetupRouter(log, scheduleHandler)
 
 	log.Info("starting server", slog.String("address", cfg.HttpServer.Address))
 
