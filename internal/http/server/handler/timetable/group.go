@@ -67,7 +67,7 @@ func (h Handler) GroupSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Info("id param parsed")
+	log.Info("id param parsed", slog.Uint64("id", groupID))
 
 	events, err := h.service.GroupSchedule(r.Context(), groupID)
 	if err != nil {

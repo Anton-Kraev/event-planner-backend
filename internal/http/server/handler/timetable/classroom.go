@@ -4,7 +4,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 
@@ -57,7 +56,7 @@ func (h Handler) ClassroomSchedule(w http.ResponseWriter, r *http.Request) {
 		slog.String("request_id", middleware.GetReqID(r.Context())),
 	)
 
-	classroomName := chi.URLParam(r, "name")
+	classroomName := r.URL.Query().Get("name")
 	if classroomName == "" {
 		log.Error("invalid request: name is required")
 
@@ -66,7 +65,7 @@ func (h Handler) ClassroomSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Info("name param parsed")
+	log.Info("name param parsed", slog.String("name", classroomName))
 
 	events, err := h.service.ClassroomSchedule(r.Context(), classroomName)
 	if err != nil {

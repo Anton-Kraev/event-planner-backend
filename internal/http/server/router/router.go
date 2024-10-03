@@ -38,9 +38,12 @@ func SetupRouter(log *slog.Logger, timetableHandler timetableHandler) http.Handl
 			r.Get("/{id}", timetableHandler.GroupSchedule)
 		})
 
-		r.Route("/classrooms", func(r chi.Router) {
-			r.Get("/", timetableHandler.Classrooms)
-			r.Get("/{name}", timetableHandler.ClassroomSchedule)
+		r.Get("/classrooms", func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Query().Get("name") == "" {
+				timetableHandler.Classrooms(w, r)
+			} else {
+				timetableHandler.ClassroomSchedule(w, r)
+			}
 		})
 	})
 

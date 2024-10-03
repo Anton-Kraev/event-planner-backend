@@ -67,7 +67,7 @@ func (h Handler) EducatorSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Info("id param parsed")
+	log.Info("id param parsed", slog.Uint64("id", educatorID))
 
 	events, err := h.service.EducatorSchedule(r.Context(), educatorID)
 	if err != nil {
